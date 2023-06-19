@@ -7,18 +7,9 @@ import { getAuth, onAuthStateChanged } from "firebase/auth";
 import 'firebase/compat/storage';
 import Login from "./Login";
 import {useNavigation} from "@react-navigation/native";
+import { firebaseConfig } from "../src/api/configFirebase";
 
-const firebaseConfig = {
-    apiKey: "myApiKey",
-    authDomain: "myAuthDomain",
-    databaseURL: "myDatabaseURL",
-    projectId: "myProjectId",
-    storageBucket: "myStorageBucket",
-    messagingSenderId: "myMessagingSenderId",
-    appId: "myAppId",
-    measurementId: "myMeasurementId"
-};
-
+// Initialize Firebase
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
