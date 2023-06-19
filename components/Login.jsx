@@ -2,18 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Text, View, TextInput, Button, StyleSheet, TouchableOpacity, Image, Alert, KeyboardAvoidingView, Platform, Keyboard, } from 'react-native';
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
+import { firebaseConfig } from "../src/api/configFirebase";
 
-// Firebase configuration
-const firebaseConfig = {
-    apiKey: "myApiKey",
-    authDomain: "myAuthDomain",
-    databaseURL: "myDatabaseURL",
-    projectId: "myProjectId",
-    storageBucket: "myStorageBucket",
-    messagingSenderId: "myMessagingSenderId",
-    appId: "myAppId",
-    measurementId: "myMeasurementId"
-};
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
