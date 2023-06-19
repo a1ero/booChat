@@ -3,18 +3,7 @@ import { Text, View, TextInput, StyleSheet, TouchableOpacity, Image, Alert, Keyb
 import { initializeApp } from 'firebase/app';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import {useNavigation} from "@react-navigation/native";
-
-// Firebase configuration
-const firebaseConfig = {
-    apiKey: "myApiKey",
-    authDomain: "myAuthDomain",
-    databaseURL: "myDatabaseURL",
-    projectId: "myProjectId",
-    storageBucket: "myStorageBucket",
-    messagingSenderId: "myMessagingSenderId",
-    appId: "myAppId",
-    measurementId: "myMeasurementId"
-};
+import { firebaseConfig } from "../src/api/configFirebase";
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
