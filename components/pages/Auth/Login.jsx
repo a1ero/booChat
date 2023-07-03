@@ -116,6 +116,13 @@ const Login = ({ navigation }) => {
                 {keyboardStatus ? (
                     <Text style={{ marginTop: 10 }}></Text>
                 ) : null}
+                <View>
+                    <TouchableOpacity
+                        title="Зарегистрируйтесь"
+                        onPress={() => navigation.navigate('ForgotPassword')}>
+                        <Text style={styles.textForgotPass}>Забыли пароль?</Text>
+                    </TouchableOpacity>
+                </View>
             </KeyboardAvoidingView>
         </TouchableWithoutFeedback>
     );
@@ -130,8 +137,8 @@ const styles = StyleSheet.create({
     },
     logo: {
         marginBottom: '5%',
-        width: '40%',
-        height: '18%',
+        width: 110,
+        height: 160,
     },
     header: {
         fontSize: 24,
@@ -142,6 +149,7 @@ const styles = StyleSheet.create({
         borderColor: '#ccc',
         borderRadius: 4,
         padding: 8,
+        height: 40,
         width: '80%',
         marginBottom: 16,
     },
@@ -168,6 +176,11 @@ const styles = StyleSheet.create({
     text: {
         marginLeft: '3%'
     },
+    textForgotPass: {
+        color: '#0098e8',
+        fontSize: 17,
+        marginTop: 30
+    }
 });
 
 export default Login;

@@ -1,5 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, TextInput, Button, Image, Platform, Alert, TouchableOpacity, Modal, } from 'react-native';
+import {
+    StyleSheet,
+    View,
+    Text,
+    TextInput,
+    Button,
+    Image,
+    Platform,
+    Alert,
+    TouchableOpacity,
+    Modal,
+    Keyboard, TouchableWithoutFeedback,
+} from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/auth';
@@ -19,6 +31,14 @@ const HomeScreen = () => {
     const [user, setUser] = useState(null);
     const auth = getAuth();
     const navigation = useNavigation();
+
+    const [keyboardShown, setKeyboardShown] = useState(false);
+    Keyboard.addListener("keyboardDidShow", () => {
+        setKeyboardShown(true);
+    });
+    Keyboard.addListener("keyboardDidHide", () => {
+        setKeyboardShown(false);
+    });
 
     useEffect(() => {
         const unsubscribe = auth.onAuthStateChanged(userAuth => {
@@ -206,150 +226,154 @@ const HomeScreen = () => {
     }
 
     return (
-        <View style={styles.container}>
-            {user ? (
-                <>
-                <View>
-                    {avatar ? (
-                        <Image source={{ uri: avatar }} style={styles.avatar} />
-                    ) : (
-                        <View style={styles.avatarPlaceholder}>
-                            <Text style={styles.placeholderAvatarText}>{user.displayName}</Text>
-                        </View>
-                    )}
-                    <TextInput
-                        value={newAvatar}
-                        onChangeText={setNewAvatar}
-                    />
-                    <TouchableOpacity title="Сменить аватар" onPress={handleAvatarChange}>
-                        <Text style={styles.changeAvatar}>Сменить фото</Text>
-                    </TouchableOpacity>
-                    <View style = {styles.containerText}>
-                        <Text style={styles.text}>{user.displayName}</Text>
-                        <TouchableOpacity  onPress={() => setShowForm(true)}>
-                            <Text style={styles.changeText}>Сменить Имя</Text>
+        <TouchableWithoutFeedback onPress={() => {
+            if(keyboardShown) Keyboard.dismiss();
+        }}>
+            <View style={styles.container}>
+                {user ? (
+                    <>
+                    <View>
+                        {avatar ? (
+                            <Image source={{ uri: avatar }} style={styles.avatar} />
+                        ) : (
+                            <View style={styles.avatarPlaceholder}>
+                                <Text style={styles.placeholderAvatarText}>{user.displayName}</Text>
+                            </View>
+                        )}
+                        <TextInput
+                            value={newAvatar}
+                            onChangeText={setNewAvatar}
+                        />
+                        <TouchableOpacity title="Сменить аватар" onPress={handleAvatarChange}>
+                            <Text style={styles.changeAvatar}>Сменить фото</Text>
                         </TouchableOpacity>
-                    </View>
-                    <View style={styles.containerEmail}>
-                        <Text style={styles.textEmail}>{user.email}</Text>
-                        <Modal
-                            animationType="slide"
-                            transparent={true}
-                            visible={showChangeEmailModal}
-                            onRequestClose={() => setShowChangeEmailModal(false)}
-                        >
-                            <View style={styles.modalContainer}>
-                                <View style={styles.modalContent}>
-                                    <Text style={styles.modalTitle}>Сменить Email</Text>
-                                    <TextInput
-                                        placeholder="Ваш новый email"
-                                        placeholderTextColor="gray"
-                                        autoCapitalize="none"
-                                        keyboardType="email-address"
-                                        style={styles.modalInput}
-                                        onChangeText={(text) => setNewEmail(text)}
-                                    />
-                                    <TextInput
-                                        placeholder="Введите текущий пароль"
-                                        placeholderTextColor="gray"
-                                        style={styles.modalInput}
-                                        value={currentPassword}
-                                        secureTextEntry={true}
-                                        onChangeText={setCurrentPassword}
-                                    />
-                                    <View style={styles.modalButtons}>
-                                        <TouchableOpacity title="Отменить" onPress={() => setShowChangeEmailModal(false)}>
-                                            <Text style={styles.modalTextClose}>Отменить</Text>
-                                        </TouchableOpacity>
-                                        <TouchableOpacity title="Сохранить" onPress={handleChangeEmailSubmit}>
-                                            <Text style={styles.modalTextSave}>Сохранить</Text>
-                                        </TouchableOpacity>
+                        <View style = {styles.containerText}>
+                            <Text style={styles.text}>{user.displayName}</Text>
+                            <TouchableOpacity  onPress={() => setShowForm(true)}>
+                                <Text style={styles.changeText}>Сменить Имя</Text>
+                            </TouchableOpacity>
+                        </View>
+                        <View style={styles.containerEmail}>
+                            <Text style={styles.textEmail}>{user.email}</Text>
+                            <Modal
+                                animationType="slide"
+                                transparent={true}
+                                visible={showChangeEmailModal}
+                                onRequestClose={() => setShowChangeEmailModal(false)}
+                            >
+                                <View style={styles.modalContainer}>
+                                    <View style={styles.modalContent}>
+                                        <Text style={styles.modalTitle}>Сменить Email</Text>
+                                        <TextInput
+                                            placeholder="Ваш новый email"
+                                            placeholderTextColor="gray"
+                                            autoCapitalize="none"
+                                            keyboardType="email-address"
+                                            style={styles.modalInput}
+                                            onChangeText={(text) => setNewEmail(text)}
+                                        />
+                                        <TextInput
+                                            placeholder="Введите текущий пароль"
+                                            placeholderTextColor="gray"
+                                            style={styles.modalInput}
+                                            value={currentPassword}
+                                            secureTextEntry={true}
+                                            onChangeText={setCurrentPassword}
+                                        />
+                                        <View style={styles.modalButtons}>
+                                            <TouchableOpacity title="Отменить" onPress={() => setShowChangeEmailModal(false)}>
+                                                <Text style={styles.modalTextClose}>Отменить</Text>
+                                            </TouchableOpacity>
+                                            <TouchableOpacity title="Сохранить" onPress={handleChangeEmailSubmit}>
+                                                <Text style={styles.modalTextSave}>Сохранить</Text>
+                                            </TouchableOpacity>
+                                        </View>
                                     </View>
                                 </View>
-                            </View>
-                        </Modal>
-                        <Modal
-                            animationType="slide"
-                            transparent={true}
-                            visible={showChangePasswordModal}
-                            onRequestClose={() => setShowChangePasswordModal(false)}
-                        >
-                            <View style={styles.modalContainer}>
-                                <View style={styles.modalContent}>
-                                    <Text style={styles.modalTitle}>Сменить пароль</Text>
-                                    <TextInput
-                                        placeholder="Введите текущий пароль"
-                                        placeholderTextColor="gray"
-                                        style={styles.modalInput}
-                                        value={currentPassword}
-                                        secureTextEntry={true}
-                                        onChangeText={setCurrentPassword}
-                                    />
-                                    <TextInput
-                                        placeholder="Введите новый пароль"
-                                        placeholderTextColor="gray"
-                                        secureTextEntry={true}
-                                        style={styles.modalInput}
-                                        onChangeText={(text) => setNewPassword(text)}
-                                    />
-                                    <View style={styles.modalButtons}>
-                                        <TouchableOpacity title="Отменить" onPress={() => setShowChangePasswordModal(false)}>
-                                            <Text style={styles.modalTextClose}>Отменить</Text>
-                                        </TouchableOpacity>
-                                        <TouchableOpacity title="Сохранить" onPress={handleChangePasswordSubmit}>
-                                            <Text style={styles.modalTextSave}>Сохранить</Text>
-                                        </TouchableOpacity>
+                            </Modal>
+                            <Modal
+                                animationType="slide"
+                                transparent={true}
+                                visible={showChangePasswordModal}
+                                onRequestClose={() => setShowChangePasswordModal(false)}
+                            >
+                                <View style={styles.modalContainer}>
+                                    <View style={styles.modalContent}>
+                                        <Text style={styles.modalTitle}>Сменить пароль</Text>
+                                        <TextInput
+                                            placeholder="Введите текущий пароль"
+                                            placeholderTextColor="gray"
+                                            style={styles.modalInput}
+                                            value={currentPassword}
+                                            secureTextEntry={true}
+                                            onChangeText={setCurrentPassword}
+                                        />
+                                        <TextInput
+                                            placeholder="Введите новый пароль"
+                                            placeholderTextColor="gray"
+                                            secureTextEntry={true}
+                                            style={styles.modalInput}
+                                            onChangeText={(text) => setNewPassword(text)}
+                                        />
+                                        <View style={styles.modalButtons}>
+                                            <TouchableOpacity title="Отменить" onPress={() => setShowChangePasswordModal(false)}>
+                                                <Text style={styles.modalTextClose}>Отменить</Text>
+                                            </TouchableOpacity>
+                                            <TouchableOpacity title="Сохранить" onPress={handleChangePasswordSubmit}>
+                                                <Text style={styles.modalTextSave}>Сохранить</Text>
+                                            </TouchableOpacity>
+                                        </View>
                                     </View>
                                 </View>
-                            </View>
-                        </Modal>
-                    </View>
-                    {showForm ? (
+                            </Modal>
+                        </View>
+                        {showForm ? (
+                            <Modal
+                                animationType="slide"
+                                onRequestClose={handleModalClose}
+                                style={styles.containerTextInput}>
+                                <TextInput
+                                    value={newName}
+                                    onChangeText={setNewName}
+                                    placeholder="Введите новое имя"
+                                    placeholderTextColor="gray"
+                                    style={styles.input}
+                                />
+                                <TouchableOpacity title="Сохранить" onPress={handleNameChange}>
+                                    <Text style={styles.modalTexNameSave}>Сохранить</Text>
+                                </TouchableOpacity>
+                            </Modal>
+                        ) : null}
                         <Modal
-                            animationType="slide"
+                            animationType="fade"
+                            visible={showModal}
                             onRequestClose={handleModalClose}
-                            style={styles.containerTextInput}>
-                            <TextInput
-                                value={newName}
-                                onChangeText={setNewName}
-                                placeholder="Введите новое имя"
-                                placeholderTextColor="gray"
-                                style={styles.input}
-                            />
-                            <TouchableOpacity title="Сохранить" onPress={handleNameChange}>
-                                <Text style={styles.modalTexNameSave}>Сохранить</Text>
-                            </TouchableOpacity>
+                        >
+                            <View style={styles.modalContainer}>
+                                <Text style={styles.modalText}>Изменения сохранены!</Text>
+                                <TouchableOpacity title="OK" onPress={handleModalClose}>
+                                    <Text style={styles.modalTexNameSave}>Ок</Text>
+                                </TouchableOpacity>
+                            </View>
                         </Modal>
-                    ) : null}
-                    <Modal
-                        animationType="fade"
-                        visible={showModal}
-                        onRequestClose={handleModalClose}
-                    >
-                        <View style={styles.modalContainer}>
-                            <Text style={styles.modalText}>Изменения сохранены!</Text>
-                            <TouchableOpacity title="OK" onPress={handleModalClose}>
-                                <Text style={styles.modalTexNameSave}>Ок</Text>
+                        <TouchableOpacity title="Сменить email" onPress={handleChangeEmail}>
+                            <Text style={styles.changeData}>Сменить email</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity title="Сменить пароль" onPress={handleChangePassword}>
+                            <Text style={styles.changeData}>Сменить пароль</Text>
+                        </TouchableOpacity>
+                        </View>
+                        <View style={styles.logoutButtonContainer}>
+                            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+                                <Text style={styles.logoutButtonText}>Выйти из аккаунта</Text>
                             </TouchableOpacity>
                         </View>
-                    </Modal>
-                    <TouchableOpacity title="Сменить email" onPress={handleChangeEmail}>
-                        <Text style={styles.changeData}>Сменить email</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity title="Сменить пароль" onPress={handleChangePassword}>
-                        <Text style={styles.changeData}>Сменить пароль</Text>
-                    </TouchableOpacity>
-                    </View>
-                    <View style={styles.logoutButtonContainer}>
-                        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-                            <Text style={styles.logoutButtonText}>Выйти из аккаунта</Text>
-                        </TouchableOpacity>
-                    </View>
-                </>
-            ) : (
-                <Login />
-            )}
-        </View>
+                    </>
+                ) : (
+                    <Login />
+                )}
+            </View>
+        </TouchableWithoutFeedback>
     );
 };
 

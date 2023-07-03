@@ -18,7 +18,7 @@ const Registration = ({ navigation }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [keyboardStatus, setKeyboardStatus] = useState(undefined);
-    const [resendTimer, setResendTimer] = useState(60);
+    const [resendTimer, setResendTimer] = useState(59); // Установка начального значения таймера
     const [showResendButton, setShowResendButton] = useState(false);
     const [isRegistrationDisabled, setIsRegistrationDisabled] = useState(false);
 
@@ -61,14 +61,14 @@ const Registration = ({ navigation }) => {
                     );
                     console.log('Email verification email sent');
                     setShowResendButton(true);
-                    setResendTimer(60);
+                    setResendTimer(59); // Сброс таймера при отправке повторного письма
                 }).catch((error) => {
                     console.error("Ошибка при отправке письма с кодом подтверждения", error);
                 }).finally(() => {
                     setIsLoading(false);
                 });
 
-                // Добавить пользователя в коллекцию «users»
+                /// Добавить пользователя в коллекцию "users"
                 db.collection("users").doc(user.uid).set({
                     email: user.email,
                     // Дополнительные поля или данные, которые вы хотите сохранить в коллекции "users"
@@ -78,6 +78,17 @@ const Registration = ({ navigation }) => {
                     })
                     .catch((error) => {
                         console.error("Ошибка при добавлении пользователя в коллекцию 'users'", error);
+                    });
+
+                // Добавить коллекцию "friends" для нового пользователя
+                db.collection("users").doc(user.uid).collection("friends").add({
+                    // Дополнительные поля или данные, которые вы хотите сохранить в коллекции "friends"
+                })
+                    .then((docRef) => {
+                        console.log("Коллекция 'friends' создана для пользователя", user.uid);
+                    })
+                    .catch((error) => {
+                        console.error("Ошибка при создании коллекции 'friends' для пользователя", user.uid, error);
                     });
 
                 // navigation.navigate("Login");
@@ -107,7 +118,7 @@ const Registration = ({ navigation }) => {
                 );
                 console.log('Email verification email resent');
                 setShowResendButton(false);
-                setResendTimer(60);
+                setResendTimer(59); // Сброс таймера при повторной отправке
             }).catch((error) => {
                 console.error("Ошибка при повторной отправке письма с кодом подтверждения", error);
             });
@@ -124,7 +135,7 @@ const Registration = ({ navigation }) => {
     }, [resendTimer]);
 
     // В значение таймера отображаются ведущие нули
-    const formattedTimer = String(resendTimer).padStart(2, '0');
+    const formattedTimer = `${String(Math.floor(resendTimer / 60)).padStart(2, '0')}:${String(resendTimer % 60).padStart(2, '0')}`;
 
     return (
         <TouchableWithoutFeedback onPress={() => {
@@ -206,8 +217,8 @@ const styles = StyleSheet.create({
     },
     logo: {
         marginBottom: '5%',
-        width: '40%',
-        height: '18%',
+        width: 110,
+        height: 160,
     },
     header: {
         fontSize: 24,
@@ -218,6 +229,7 @@ const styles = StyleSheet.create({
         borderColor: '#ccc',
         borderRadius: 4,
         padding: 8,
+        height: 40,
         width: '80%',
         marginBottom: 16,
     },

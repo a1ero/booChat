@@ -1,9 +1,6 @@
 import React from 'react';
-import {View, StyleSheet, Text, useWindowDimensions, Image, TouchableOpacity} from 'react-native';
+import {View, StyleSheet, useWindowDimensions, Image, TouchableOpacity} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-
-import '../pages/Account/Home'
-import '../pages/Users/UserPage'
 
 const Panel = () => {
     const navigation = useNavigation();

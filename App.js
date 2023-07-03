@@ -1,5 +1,4 @@
 import React from 'react';
-import { StyleSheet } from 'react-native';
 import Registration from "./components/pages/Auth/Registration";
 import Login from "./components/pages/Auth/Login";
 import Home from "./components/pages/Account/Home"
@@ -9,6 +8,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import Main from "./components/pages/Account/Main";
 import Chat from "./components/pages/Chat/Chat";
 import UserPage from "./components/pages/Users/UserPage";
+import ForgotPassword from "./components/pages/Auth/ForgotPassword";
 
 const Stack = createStackNavigator();
 
@@ -29,6 +29,10 @@ export default function App() {
                 <Stack.Screen
                     name="Registration"
                     component={Registration}
+                />
+                <Stack.Screen
+                    name="ForgotPassword"
+                    component={ForgotPassword}
                 />
                 <Stack.Screen
                     name="Main"

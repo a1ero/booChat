@@ -1,10 +1,23 @@
 import React, { useState } from "react";
-import { View, TextInput, StyleSheet, Text, TouchableOpacity, Modal, Alert } from "react-native";
+import {
+    View,
+    TextInput,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    Modal,
+    Alert,
+    Keyboard,
+    TouchableWithoutFeedback
+} from "react-native";
 import 'firebase/compat/auth';
 import 'firebase/compat/firestore';
 import firebase from "firebase/compat/app";
 import { firebaseConfig } from "../../../src/api/configFirebase";
+
 import FoundUser from "../Users/StatusSearchUser/FoundUser";
+import Line from "../../component/Line";
+
 
 // Инициализация Firebase
 if (!firebase.apps.length) {
@@ -17,6 +30,14 @@ const UserItem = () => {
     const [user, setUser] = useState(null);
     const [showModal, setShowModal] = useState(false); // Состояние для отслеживания видимости модального окна
     const [searched, setSearched] = useState(false); // Состояние для отслеживания, был ли выполнен поиск
+
+    const [keyboardShown, setKeyboardShown] = useState(false);
+    Keyboard.addListener("keyboardDidShow", () => {
+        setKeyboardShown(true);
+    });
+    Keyboard.addListener("keyboardDidHide", () => {
+        setKeyboardShown(false);
+    });
 
     const handleSearchFriend = () => {
         // Проверка валидности email
@@ -43,7 +64,7 @@ const UserItem = () => {
                 console.error("Ошибка при поиске пользователя", error);
             })
             .finally(() => {
-                setSearched(true); // Устанавливаем состояние, что поиск выполнен
+                setSearched(true); // Устанавливаю состояние, что поиск выполнен
             });
     };
 
@@ -59,42 +80,47 @@ const UserItem = () => {
     };
 
     return (
-        <View style={styles.container}>
-            <Text style={styles.textSearchFriend}>Найти друга</Text>
-            <View style={styles.contentView}>
-                <TextInput
-                    value={email}
-                    onChangeText={setEmail}
-                    placeholder="Email"
-                    style={styles.textInput}
-                />
-                <TouchableOpacity title="Найти" onPress={handleSearchFriend}>
-                    <Text style={styles.searchText}>Найти</Text>
-                </TouchableOpacity>
-            </View>
-            {!userFound && searched && (
-                <View style={styles.notFoundContainer}>
-                    <Text style={styles.notFoundText}>Пользователь не найден</Text>
-                </View>
-            )}
-
-            {/* Модальное окно */}
-            <Modal visible={showModal} animationType="slide" transparent>
-                <View style={styles.modalContainer}>
-                    <TouchableOpacity style={styles.modalCloseButton} onPress={closeModal}>
-                        <Text style={styles.modalCloseText}>Закрыть</Text>
+        <TouchableWithoutFeedback onPress={() => {
+            if(keyboardShown) Keyboard.dismiss();
+        }}>
+            <View style={styles.container}>
+                <Text style={styles.textSearchFriend}>Найти друга</Text>
+                <View style={styles.contentView}>
+                    <TextInput
+                        value={email}
+                        onChangeText={setEmail}
+                        placeholder="Email"
+                        style={styles.textInput}
+                    />
+                    <TouchableOpacity title="Найти" onPress={handleSearchFriend}>
+                        <Text style={styles.searchText}>Найти</Text>
                     </TouchableOpacity>
-                    <View style={styles.modalContent}>
-                        {userFound && user ? (
-                            <FoundUser user={user} onPress={handleSearchFriend} /> // Передаем функцию handleSearchFriend в компонент FoundUser
-                        ) : (
-                            <></>
-                        )}
-                    </View>
                 </View>
-            </Modal>
-            <Text style={styles.textFriends}>Друзья</Text>
-        </View>
+                {!userFound && searched && (
+                    <View style={styles.notFoundContainer}>
+                        <Text style={styles.notFoundText}>Пользователь не найден</Text>
+                    </View>
+                )}
+
+                {/* Модальное окно */}
+                <Modal visible={showModal} animationType="slide" transparent>
+                    <View style={styles.modalContainer}>
+                        <TouchableOpacity style={styles.modalCloseButton} onPress={closeModal}>
+                            <Text style={styles.modalCloseText}>Закрыть</Text>
+                        </TouchableOpacity>
+                        <View style={styles.modalContent}>
+                            {userFound && user ? (
+                                <FoundUser user={user} onPress={handleSearchFriend} /> // Передаю функцию handleSearchFriend в компонент FoundUser
+                            ) : (
+                                <></>
+                            )}
+                        </View>
+                    </View>
+                </Modal>
+                <Text style={styles.textFriends}>Друзья</Text>
+                <Line/>
+            </View>
+        </TouchableWithoutFeedback>
     );
 };
 
@@ -116,7 +142,10 @@ const styles = StyleSheet.create({
         marginLeft: 'auto',
         marginRight: 'auto',
         marginBottom: 10,
-        padding: 10,
+        paddingTop: 10,
+        paddingBottom: 10,
+        paddingLeft: 20,
+        paddingRight: 20,
         backgroundColor: '#dadada',
         borderRadius: 10,
     },
@@ -127,11 +156,13 @@ const styles = StyleSheet.create({
         fontSize: 18,
         color: '#2E66E7',
         marginTop: 10,
+        marginLeft: 15,
         textAlign: 'center',
     },
     textFriends: {
-        fontSize: 40,
-        marginTop: '1%'
+        fontSize: 35,
+        marginTop: '1%',
+        marginBottom: 10
     },
     notFoundContainer: {
         alignItems: 'center',
