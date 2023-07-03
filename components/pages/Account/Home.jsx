@@ -3,13 +3,14 @@ import { StyleSheet, View, Text, TextInput, Button, Image, Platform, Alert, Touc
 import * as ImagePicker from 'expo-image-picker';
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/auth';
-import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { getAuth } from "firebase/auth";
 import 'firebase/compat/storage';
-import Login from "./Login";
-import {useNavigation} from "@react-navigation/native";
-import { firebaseConfig } from "../src/api/configFirebase";
+import 'firebase/compat/firestore';
+import Login from "../Auth/Login";
+import { useNavigation } from "@react-navigation/native";
+import { firebaseConfig } from "../../../src/api/configFirebase";
 
-// Initialize Firebase
+// Инициализация Firebase
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
@@ -65,6 +66,14 @@ const HomeScreen = () => {
                 }).then(function() {
                     setShowModal(true);
                     console.log('Profile photo updated!');
+
+                    // загрузить аватарку в Firestore
+                    const userRef = firebase.firestore().collection('users').doc(user.uid);
+                    userRef.update({ avatar: url }).then(() => {
+                        console.log('Avatar updated in Firestore collection!');
+                    }).catch(error => {
+                        console.error('Error updating avatar in Firestore:', error);
+                    });
                 }).catch(function(error) {
                     console.error(error);
                 });
@@ -83,19 +92,27 @@ const HomeScreen = () => {
             Alert.alert("Ошибка", "Email не может быть пустым!");
             return;
         }
-
-        // check if current password is correct
+        // проверить правильность текущего пароля
         const credential = firebase.auth.EmailAuthProvider.credential(user.email, currentPassword);
         firebase.auth().currentUser.reauthenticateWithCredential(credential).then(() => {
-            // update email if password is correct
+            // обновить электронную почту, если пароль правильный
             firebase.auth().currentUser.updateEmail(newEmail).then(() => {
                 console.log("Email updated successfully!");
+                // обновить email в Firestore
+                const userRef = firebase.firestore().collection('users').doc(user.uid);
+                userRef.update({ email: newEmail }).then(() => {
+                    console.log('Email updated in Firestore collection!');
+                }).catch(error => {
+                    console.error('Error updating email in Firestore:', error);
+                });
                 setShowChangeEmailModal(false);
                 setShowModal(true);
             }).catch(error => {
                 if (error.code === 'auth/weak-password') {
                     Alert.alert('Ошибка', 'Пароль должен состоять из 8 и более символов!');
                 }
+                else if (error.code === 'auth/email-already-in-use')
+                    Alert.alert('Ошибка', 'Такой email уже используется!');
                 console.log(error.message);
             });
         }).catch(error => {
@@ -113,6 +130,9 @@ const HomeScreen = () => {
     const handleChangePasswordSubmit = () => {
         if (newPassword.trim() === '') {
             Alert.alert('Ошибка', 'Пароль не может быть пустым!');
+            return;
+        }
+        if (newPassword.length < 8) {Alert.alert('Ошибка', 'Пароль должен состоять из 8 и более символов!');
             return;
         }
 
@@ -152,14 +172,23 @@ const HomeScreen = () => {
             Alert.alert('Ошибка', 'Имя не может быть пустым!');
             return;
         }
+
         firebase.auth().currentUser.updateProfile({
             displayName: newName
-        }).then(function() {
+        }).then(() => {
             console.log('Profile name updated!');
             setShowForm(false);
             setShowModal(true);
-        }).catch(function(error) {
-            console.error(error);
+
+            // Update the name in Firestore collection 'users'
+            const userRef = firebase.firestore().collection('users').doc(user.uid);
+            userRef.update({ name: newName }).then(() => {
+                console.log('Name updated in Firestore collection!');
+            }).catch(error => {
+                console.error('Error updating name in Firestore:', error);
+            });
+        }).catch(error => {
+            console.error('Error updating profile name:', error);
         });
     };
 
@@ -170,7 +199,7 @@ const HomeScreen = () => {
     const handleLogout = () => {
         firebase.auth().signOut().then(() => {
             console.log('Signed out successfully');
-            navigation.navigate("Login");
+            navigation.navigate('Login');
         }).catch((error) => {
             console.error(error);
         });
@@ -180,17 +209,21 @@ const HomeScreen = () => {
         <View style={styles.container}>
             {user ? (
                 <>
+                <View>
                     {avatar ? (
                         <Image source={{ uri: avatar }} style={styles.avatar} />
                     ) : (
-                        <View style={styles.avatarPlaceholder} />
+                        <View style={styles.avatarPlaceholder}>
+                            <Text style={styles.placeholderAvatarText}>{user.displayName}</Text>
+                        </View>
                     )}
                     <TextInput
                         value={newAvatar}
                         onChangeText={setNewAvatar}
-                        placeholder={user.displayName}
                     />
-                    <Button title="Сменить аватар" onPress={handleAvatarChange}/>
+                    <TouchableOpacity title="Сменить аватар" onPress={handleAvatarChange}>
+                        <Text style={styles.changeAvatar}>Сменить фото</Text>
+                    </TouchableOpacity>
                     <View style = {styles.containerText}>
                         <Text style={styles.text}>{user.displayName}</Text>
                         <TouchableOpacity  onPress={() => setShowForm(true)}>
@@ -217,7 +250,7 @@ const HomeScreen = () => {
                                         onChangeText={(text) => setNewEmail(text)}
                                     />
                                     <TextInput
-                                        placeholder="Введите новый пароль"
+                                        placeholder="Введите текущий пароль"
                                         placeholderTextColor="gray"
                                         style={styles.modalInput}
                                         value={currentPassword}
@@ -225,8 +258,12 @@ const HomeScreen = () => {
                                         onChangeText={setCurrentPassword}
                                     />
                                     <View style={styles.modalButtons}>
-                                        <Button title="Отменить" onPress={() => setShowChangeEmailModal(false)} />
-                                        <Button title="Сохранить" onPress={handleChangeEmailSubmit} />
+                                        <TouchableOpacity title="Отменить" onPress={() => setShowChangeEmailModal(false)}>
+                                            <Text style={styles.modalTextClose}>Отменить</Text>
+                                        </TouchableOpacity>
+                                        <TouchableOpacity title="Сохранить" onPress={handleChangeEmailSubmit}>
+                                            <Text style={styles.modalTextSave}>Сохранить</Text>
+                                        </TouchableOpacity>
                                     </View>
                                 </View>
                             </View>
@@ -256,8 +293,12 @@ const HomeScreen = () => {
                                         onChangeText={(text) => setNewPassword(text)}
                                     />
                                     <View style={styles.modalButtons}>
-                                        <Button title="Отменить" onPress={() => setShowChangePasswordModal(false)} />
-                                        <Button title="Сохранить" onPress={handleChangePasswordSubmit} />
+                                        <TouchableOpacity title="Отменить" onPress={() => setShowChangePasswordModal(false)}>
+                                            <Text style={styles.modalTextClose}>Отменить</Text>
+                                        </TouchableOpacity>
+                                        <TouchableOpacity title="Сохранить" onPress={handleChangePasswordSubmit}>
+                                            <Text style={styles.modalTextSave}>Сохранить</Text>
+                                        </TouchableOpacity>
                                     </View>
                                 </View>
                             </View>
@@ -275,7 +316,9 @@ const HomeScreen = () => {
                                 placeholderTextColor="gray"
                                 style={styles.input}
                             />
-                            <Button title="Сохранить" onPress={handleNameChange}></Button>
+                            <TouchableOpacity title="Сохранить" onPress={handleNameChange}>
+                                <Text style={styles.modalTexNameSave}>Сохранить</Text>
+                            </TouchableOpacity>
                         </Modal>
                     ) : null}
                     <Modal
@@ -285,12 +328,23 @@ const HomeScreen = () => {
                     >
                         <View style={styles.modalContainer}>
                             <Text style={styles.modalText}>Изменения сохранены!</Text>
-                            <Button title="OK" onPress={handleModalClose}/>
+                            <TouchableOpacity title="OK" onPress={handleModalClose}>
+                                <Text style={styles.modalTexNameSave}>Ок</Text>
+                            </TouchableOpacity>
                         </View>
                     </Modal>
-                    <Button title="Сменить email" onPress={handleChangeEmail} />
-                    <Button title="Сменить пароль" onPress={handleChangePassword} />
-                    <Button title="Выйти из аккаунта" onPress={handleLogout} color="#FF0000" />
+                    <TouchableOpacity title="Сменить email" onPress={handleChangeEmail}>
+                        <Text style={styles.changeData}>Сменить email</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity title="Сменить пароль" onPress={handleChangePassword}>
+                        <Text style={styles.changeData}>Сменить пароль</Text>
+                    </TouchableOpacity>
+                    </View>
+                    <View style={styles.logoutButtonContainer}>
+                        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+                            <Text style={styles.logoutButtonText}>Выйти из аккаунта</Text>
+                        </TouchableOpacity>
+                    </View>
                 </>
             ) : (
                 <Login />
@@ -302,9 +356,15 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
     container: {
         display: 'flex',
+        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#f1f1f1'
+        position: 'absolute',
+        // top: '-10%',
+        backgroundColor: '#f1f1f1',
+        // backgroundColor: '#c9a2a2',
+        height: '100%',
+        paddingBottom: '50%',
     },
     avatarPlaceholder: {
         width: 150,
@@ -312,14 +372,21 @@ const styles = StyleSheet.create({
         backgroundColor: '#989898',
         borderRadius: 80,
         marginBottom: 16,
-        marginTop: 20
+        marginTop: 20,
+        marginLeft: 'auto',
+        marginRight: 'auto',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center'
     },
     avatar: {
         width: 150,
         height: 150,
         borderRadius: 80,
         marginBottom: 16,
-        marginTop: 20
+        marginTop: 20,
+        marginLeft: 'auto',
+        marginRight: 'auto',
     },
     containerText: {
         display: 'flex',
@@ -344,6 +411,26 @@ const styles = StyleSheet.create({
         color: '#2E66E7',
         marginLeft: '66%'
     },
+    changeAvatar: {
+        fontSize: 16,
+        color: '#2E66E7',
+        textAlign: 'center',
+    },
+    placeholderAvatarText: {
+        fontSize: 20,
+        color: '#b7b7b7',
+        textAlign: 'center',
+        fontWeight: 'bold',
+        marginLeft: 'auto',
+        marginRight: 'auto',
+        padding: 7
+    },
+    changeData: {
+        fontSize: 19,
+        color: '#2E66E7',
+        marginTop: 10,
+        textAlign: 'center',
+    },
     containerTextInput: {
         flex: 1,
         alignItems: 'center',
@@ -352,8 +439,9 @@ const styles = StyleSheet.create({
     input: {
         display: 'flex',
         textAlign: 'center',
-        marginTop: '100%',
-        marginLeft: '10%',
+        marginTop: '85%',
+        marginLeft: 'auto',
+        marginRight: 'auto',
         marginBottom: 15,
         width : 300,
         height: 50,
@@ -416,6 +504,35 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         marginBottom: 16
     },
+    modalTextClose: {
+        fontSize: 18,
+        color: '#ff0000',
+    },
+    modalTextSave: {
+        fontSize: 18,
+        color: '#2E66E7',
+    },
+    modalTexNameSave: {
+        fontSize: 18,
+        color: '#2E66E7',
+        textAlign: 'center',
+    },
+    logoutButtonContainer: {
+        position: 'absolute',
+        bottom: 100,
+        left: 0,
+        right: 0,
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 10,
+    },
+    logoutButton: {
+
+    },
+    logoutButtonText: {
+        color: '#ff0000',
+        fontSize: 18
+    }
 });
 
 export default HomeScreen;
