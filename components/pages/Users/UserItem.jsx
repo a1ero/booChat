@@ -88,7 +88,7 @@ const UserItem = () => {
                         {userFound && user ? (
                             <FoundUser user={user} onPress={handleSearchFriend} /> // Передаем функцию handleSearchFriend в компонент FoundUser
                         ) : (
-                            <NotFoundUser />
+                            <></>
                         )}
                     </View>
                 </View>
