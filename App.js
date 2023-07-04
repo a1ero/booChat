@@ -10,6 +10,7 @@ import Chat from "./components/pages/Chat/Chat";
 import UserPage from "./components/pages/Users/UserPage";
 import ForgotPassword from "./components/pages/Auth/ForgotPassword";
 import NewFriends from "./components/pages/Users/Friends/NewFriends/NewFriends";
+import ChatOneUser from "./components/pages/Chat/ChatForOneUser/ChatOneUser";
 
 const Stack = createStackNavigator();
 
@@ -50,6 +51,10 @@ export default function App() {
                 <Stack.Screen
                     name="NewFriends"
                     component={NewFriends}
+                />
+                <Stack.Screen
+                    name="ChatOneUser"
+                    component={ChatOneUser}
                 />
                 {/*<Stack.Screen name="Home" component={Home} />*/}
             </Stack.Navigator>

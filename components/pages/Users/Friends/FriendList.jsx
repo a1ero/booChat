@@ -3,6 +3,9 @@ import { View, Text, FlatList, StyleSheet, Image, TouchableOpacity, Modal } from
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/firestore';
 import { firebaseConfig } from '../../../../src/api/configFirebase';
+import {useNavigation} from "@react-navigation/native";
+
+import Line from "../../../component/Line";
 
 
 // Инициализация Firebase
@@ -10,10 +13,11 @@ if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
 
-const FriendList = ({navigation}) => {
+const FriendList = () => {
     const [friends, setFriends] = useState([]);
     const [selectedFriend, setSelectedFriend] = useState(null);
-
+    const [friendSubscriptions, setFriendSubscriptions] = useState([]);
+    const navigation = useNavigation();
 
     useEffect(() => {
         // Получение друзей для текущего пользователя
@@ -30,6 +34,55 @@ const FriendList = ({navigation}) => {
         });
 
         return () => unsubscribe();
+    }, []);
+
+    useEffect(() => {
+        // Получение друзей для текущего пользователя
+        const currentUser = firebase.auth().currentUser;
+        const db = firebase.firestore();
+        const friendsRef = db.collection('users').doc(currentUser.uid).collection('friends');
+
+        const unsubscribe = friendsRef.onSnapshot((snapshot) => {
+            const friends = snapshot.docs.map((doc) => ({
+                id: doc.id,
+                ...doc.data(),
+            }));
+            setFriends(friends);
+
+            // Создание подписки на обновление данных
+            const subscriptions = friends.map((friend) => {
+                return db.collection('users').doc(friend.id).onSnapshot((doc) => {
+                    if (doc.exists) {
+                        const updatedFriend = {
+                            id: doc.id,
+                            ...doc.data(),
+                        };
+
+                        setFriends((prevFriends) => {
+                            const updatedFriends = prevFriends.map((friend) => {
+                                if (friend.id === updatedFriend.id) {
+                                    return updatedFriend;
+                                }
+                                return friend;
+                            });
+                            return updatedFriends;
+                        });
+
+                        if (selectedFriend && selectedFriend.id === updatedFriend.id) {
+                            setSelectedFriend(updatedFriend);
+                        }
+                    }
+                });
+            });
+
+            // Сохранение подписок в состоянии
+            setFriendSubscriptions(subscriptions);
+        });
+
+        return () => {
+            // Отписка от всех подписок при размонтировании компонента
+            friendSubscriptions.forEach((unsubscribe) => unsubscribe());
+        };
     }, []);
 
     const handleRemoveFriend = async (friendId) => {
@@ -55,9 +108,11 @@ const FriendList = ({navigation}) => {
 
             console.log('Friend removed successfully');
             setSelectedFriend(null); // Закрытие модального окна после удаления друга
+            friendSubscriptions.forEach((unsubscribe) => unsubscribe());
         } catch (error) {
             console.error('Error removing friend:', error);
         }
+
     };
 
     const openProfileModal = (friend) => {
@@ -71,6 +126,7 @@ const FriendList = ({navigation}) => {
     return (
         <View>
             <FlatList
+                style={styles.container}
                 data={friends}
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => (
@@ -83,16 +139,15 @@ const FriendList = ({navigation}) => {
                         </TouchableOpacity>
                         <View>
                             <TouchableOpacity
-                                style={styles.removeButton}
-                                onPress={() => navigation.navigate('Main')}
+                                style={styles.send}
+                                onPress={() => navigation.navigate('ChatOneUser')}
                             >
-                                <Text style={styles.removeButtonText}>Send</Text>
+                                <Image source={require('../../../../src/icon/Chat/send.png')} style={styles.icon} />
                             </TouchableOpacity>
                         </View>
                     </View>
                 )}
             />
-
             {selectedFriend && (
                 <Modal
                     visible={true}
@@ -106,7 +161,7 @@ const FriendList = ({navigation}) => {
                             style={styles.modalRemoveButton}
                             onPress={() => handleRemoveFriend(selectedFriend.id)}
                         >
-                            <Text style={styles.modalRemoveButtonText}>Удалить</Text>
+                            <Text style={styles.modalRemoveButtonText}>Удалить из друзей</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={styles.modalCloseButton}
@@ -122,6 +177,9 @@ const FriendList = ({navigation}) => {
 };
 
 const styles = StyleSheet.create({
+    container: {
+      paddingTop:10,
+    },
     heading: {
         fontSize: 24,
         fontWeight: 'bold',
@@ -133,6 +191,9 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         marginBottom: 10,
         width: '100%',
+        borderBottomWidth: 1,
+        borderColor: '#C8C8C8',
+        paddingBottom: 10
     },
     contentFriend: {
         display: 'flex',
@@ -166,8 +227,8 @@ const styles = StyleSheet.create({
         padding: 20,
     },
     modalAvatar: {
-        width: 120,
-        height: 120,
+        width: 190,
+        height: 190,
         borderRadius: 100,
         marginBottom: 20,
     },
@@ -177,7 +238,7 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
     modalRemoveButton: {
-        backgroundColor: '#FF4136',
+        backgroundColor: '#ff564b',
         paddingHorizontal: 12,
         paddingVertical: 6,
         borderRadius: 10,
@@ -196,6 +257,13 @@ const styles = StyleSheet.create({
     modalCloseButtonText: {
         color: '#2E66E7',
         fontSize: 20,
+    },
+    send: {
+
+    },
+    icon: {
+        width: 50,
+        height: 50,
     },
 });
 
