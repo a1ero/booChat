@@ -8,7 +8,7 @@ import {
     Modal,
     Alert,
     Keyboard,
-    TouchableWithoutFeedback
+    TouchableWithoutFeedback, Image
 } from "react-native";
 import 'firebase/compat/auth';
 import 'firebase/compat/firestore';
@@ -17,6 +17,8 @@ import { firebaseConfig } from "../../../src/api/configFirebase";
 
 import FoundUser from "../Users/StatusSearchUser/FoundUser";
 import Line from "../../component/Line";
+import {useNavigation} from "@react-navigation/native";
+import Friend from "./Friends/Friend";
 
 
 // Инициализация Firebase
@@ -30,6 +32,7 @@ const UserItem = () => {
     const [user, setUser] = useState(null);
     const [showModal, setShowModal] = useState(false); // Состояние для отслеживания видимости модального окна
     const [searched, setSearched] = useState(false); // Состояние для отслеживания, был ли выполнен поиск
+    const navigation = useNavigation();
 
     const [keyboardShown, setKeyboardShown] = useState(false);
     Keyboard.addListener("keyboardDidShow", () => {
@@ -39,7 +42,7 @@ const UserItem = () => {
         setKeyboardShown(false);
     });
 
-    const handleSearchFriend = () => {
+    const handleSearchFriend = ({navigation}) => {
         // Проверка валидности email
         if (!validateEmail(email)) {
             Alert.alert('Ошибка', 'Пожалуйста, введите правильный email');
@@ -84,7 +87,15 @@ const UserItem = () => {
             if(keyboardShown) Keyboard.dismiss();
         }}>
             <View style={styles.container}>
-                <Text style={styles.textSearchFriend}>Найти друга</Text>
+                <View style={styles.header}>
+                    <Text style={styles.textSearchFriend}>Найти друга</Text>
+                    <TouchableOpacity onPress={() => navigation.navigate('NewFriends')}>
+                        <Image
+                            style={styles.newFriend}
+                            source={require('../../../src/icon/NewFriends/newFriendsIcon.png')}
+                        />
+                    </TouchableOpacity>
+                </View>
                 <View style={styles.contentView}>
                     <TextInput
                         value={email}
@@ -119,6 +130,7 @@ const UserItem = () => {
                 </Modal>
                 <Text style={styles.textFriends}>Друзья</Text>
                 <Line/>
+                <Friend/>
             </View>
         </TouchableWithoutFeedback>
     );
@@ -129,6 +141,15 @@ const styles = StyleSheet.create({
         display: "flex",
         flexDirection: 'column',
         width: '90%'
+    },
+    header: {
+        display: 'flex',
+        flexDirection: 'row',
+        justifyContent: 'space-between'
+    },
+    newFriend: {
+        height:25,
+        width: 28,
     },
     contentView: {
         display: "flex",

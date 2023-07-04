@@ -22,16 +22,16 @@ const Panel = () => {
     return (
         <View style={[styles.container, { height: height * 0.1 }]}>
             <TouchableOpacity onPress={handleHomePress}>
-                <Image source={require('../../src/icon/house.png')} style={styles.icon} />
+                <Image source={require('../../src/icon/Panel/house.png')} style={styles.icon} />
             </TouchableOpacity>
             <TouchableOpacity onPress={handleChatPress}>
-                <Image source={require('../../src/icon/chat-dots.png')} style={styles.icon} />
+                <Image source={require('../../src/icon/Panel/chat-dots.png')} style={styles.icon} />
             </TouchableOpacity>
             <TouchableOpacity onPress={handleGeoPress}>
-                <Image source={require('../../src/icon/geo-alt.png')} style={styles.icon} />
+                <Image source={require('../../src/icon/Panel/geo-alt.png')} style={styles.icon} />
             </TouchableOpacity>
             <TouchableOpacity onPress={handleUsersPress}>
-                <Image source={require('../../src/icon/person.png')} style={styles.icon} />
+                <Image source={require('../../src/icon/Panel/person.png')} style={styles.icon} />
             </TouchableOpacity>
         </View>
     );

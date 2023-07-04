@@ -1,13 +1,13 @@
 import React from "react";
-import {StyleSheet, View} from "react-native";
-import FriendList from "./FriendList";
-import Panel from "../../../panel/Panel";
+import  {StyleSheet, Text, View } from "react-native";
+import NewFriendsList from "./NewFriendsList";
+import Panel from "../../../../panel/Panel";
 
-const Friend = () => {
+const NewFriends = () => {
 
-    return (
+    return(
         <View style={styles.container}>
-            <FriendList/>
+            <NewFriendsList/>
             <Panel/>
         </View>
     )
@@ -20,8 +20,7 @@ const styles = StyleSheet.create({
         //alignItems: 'center',
         height: '100%',
         width : '100%',
-        paddingTop: '5%'
+        paddingTop: '15%'
     },
 });
-
-export default Friend;
+export default NewFriends;

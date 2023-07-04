@@ -9,6 +9,7 @@ import Main from "./components/pages/Account/Main";
 import Chat from "./components/pages/Chat/Chat";
 import UserPage from "./components/pages/Users/UserPage";
 import ForgotPassword from "./components/pages/Auth/ForgotPassword";
+import NewFriends from "./components/pages/Users/Friends/NewFriends/NewFriends";
 
 const Stack = createStackNavigator();
 
@@ -45,6 +46,10 @@ export default function App() {
                 <Stack.Screen
                     name="User"
                     component={UserPage}
+                />
+                <Stack.Screen
+                    name="NewFriends"
+                    component={NewFriends}
                 />
                 {/*<Stack.Screen name="Home" component={Home} />*/}
             </Stack.Navigator>

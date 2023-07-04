@@ -69,7 +69,7 @@ const ForgotPassword = ({navigation}) => {
                             onChangeText={(text) => setEmail(text)}
                         />
                         <TouchableOpacity style={styles.button} onPress={handlePasswordRecovery}>
-                            <Text style={styles.buttonText}>Отправить инструкции</Text>
+                            <Text style={styles.buttonText}>Сбросить пароль</Text>
                         </TouchableOpacity>
                         <TouchableOpacity onPress={() => navigation.navigate('Login')}>
                             <Text style={styles.buttonTextBack}>Назад</Text>

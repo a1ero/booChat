@@ -22,7 +22,7 @@ const Registration = ({ navigation }) => {
     const [showResendButton, setShowResendButton] = useState(false);
     const [isRegistrationDisabled, setIsRegistrationDisabled] = useState(false);
 
-    // Слушать события клавиатуры, чтобы настроить раскладку
+    // Слушает события клавиатуры, чтобы настроить раскладку
     useEffect(() => {
         const keyboardDidShowListener = Keyboard.addListener(
             'keyboardDidShow',
@@ -80,18 +80,11 @@ const Registration = ({ navigation }) => {
                         console.error("Ошибка при добавлении пользователя в коллекцию 'users'", error);
                     });
 
-                // Добавить коллекцию "friends" для нового пользователя
-                db.collection("users").doc(user.uid).collection("friends").add({
-                    // Дополнительные поля или данные, которые вы хотите сохранить в коллекции "friends"
-                })
-                    .then((docRef) => {
-                        console.log("Коллекция 'friends' создана для пользователя", user.uid);
-                    })
-                    .catch((error) => {
-                        console.error("Ошибка при создании коллекции 'friends' для пользователя", user.uid, error);
-                    });
-
-                // navigation.navigate("Login");
+                // // Добавить "friends" для нового пользователя
+                // db.collection("users").doc(user.uid).collection("friends").doc().set({});
+                //
+                // // Добавить "friendRequests" для нового пользователя
+                // db.collection("users").doc(user.uid).collection("friendRequests").doc().set({});
             })
             .catch((error) => {
                 setIsLoading(false);
@@ -114,7 +107,7 @@ const Registration = ({ navigation }) => {
             user.sendEmailVerification().then(() => {
                 Alert.alert(
                     'Повторная отправка',
-                    'Письмо с кодом подтверждения было повторно отправлено на вашу почту. Проверьте папку СПАМ, если письма нет.'
+                    'Письмо с кодом подтверждения было повторно отправлено на вашу почту. Проверьте папку спам, если письма нет.'
                 );
                 console.log('Email verification email resent');
                 setShowResendButton(false);
