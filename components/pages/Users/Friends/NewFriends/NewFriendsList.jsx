@@ -108,26 +108,32 @@ const NewFriendsList = () => {
     return (
         <View>
             <Text style={styles.heading}>Заявки в друзья</Text>
-            <Line/>
-            <FlatList
-                data={friendRequests}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                    <View style={styles.friendRequestContainer}>
-                        <TouchableOpacity onPress={() => openModal(item)}>
-                            <View style={styles.contentView}>
-                                <Image source={{ uri: item.senderAvatar }} style={styles.avatar} />
-                                <Text style={styles.friendName}>{item.senderName}</Text>
+            {friendRequests.length === 0 ? (
+                <Text style={styles.emptyText}>Список заявок пуст</Text>
+            ) : (
+                <>
+                    <Line />
+                    <FlatList
+                        data={friendRequests}
+                        keyExtractor={(item) => item.id}
+                        renderItem={({ item }) => (
+                            <View style={styles.friendRequestContainer}>
+                                <TouchableOpacity onPress={() => openModal(item)}>
+                                    <View style={styles.contentView}>
+                                        <Image source={{ uri: item.senderAvatar }} style={styles.avatar} />
+                                        <Text style={styles.friendName}>{item.senderName}</Text>
+                                    </View>
+                                </TouchableOpacity>
+                                <View>
+                                    <TouchableOpacity onPress={() => openModal(item)}>
+                                        <Text style={styles.viewButton}>Посмотреть</Text>
+                                    </TouchableOpacity>
+                                </View>
                             </View>
-                        </TouchableOpacity>
-                        <View>
-                            <TouchableOpacity onPress={() => openModal(item)}>
-                                <Text style={styles.viewButton}>Посмотреть</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                )}
-            />
+                        )}
+                    />
+                </>
+            )}
             {selectedFriend && (
                 <Modal
                     visible={true}
@@ -139,7 +145,7 @@ const NewFriendsList = () => {
                         <View style={styles.modalContent}>
                             <Image source={{ uri: selectedFriend.senderAvatar }} style={styles.modalAvatar} />
                             <Text style={styles.modalFriendName}>{selectedFriend.senderName}</Text>
-                            <View style = {styles.modalBtn}>
+                            <View style={styles.modalBtn}>
                                 <TouchableOpacity style={styles.modalAcceptButton} onPress={() => handleAcceptFriendRequest(selectedFriend.id)}>
                                     <Text style={styles.modalAcceptButtonText}>Принять</Text>
                                 </TouchableOpacity>
@@ -159,6 +165,11 @@ const NewFriendsList = () => {
 };
 
 const styles = StyleSheet.create({
+    emptyText: {
+        fontSize: 18,
+        textAlign: 'center',
+        marginTop: 20,
+    },
     heading: {
         fontSize: 24,
         fontWeight: 'bold',
@@ -233,7 +244,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         marginBottom: 20,
     },
-    modalBtn:{
+    modalBtn: {
         display: 'flex',
         flexDirection: 'row',
         width: '80%',

@@ -3,20 +3,19 @@ import { View, Text, FlatList, StyleSheet, Image, TouchableOpacity, Modal } from
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/firestore';
 import { firebaseConfig } from '../../../../src/api/configFirebase';
-import {useNavigation} from "@react-navigation/native";
+import { useNavigation } from "@react-navigation/native";
 
 import Line from "../../../component/Line";
-
 
 // Инициализация Firebase
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
 
-const FriendList = () => {
+const FriendList = ({ filteredName }) => {
     const [friends, setFriends] = useState([]);
+    const [filteredFriends, setFilteredFriends] = useState([]);
     const [selectedFriend, setSelectedFriend] = useState(null);
-    const [friendSubscriptions, setFriendSubscriptions] = useState([]);
     const navigation = useNavigation();
 
     useEffect(() => {
@@ -37,53 +36,12 @@ const FriendList = () => {
     }, []);
 
     useEffect(() => {
-        // Получение друзей для текущего пользователя
-        const currentUser = firebase.auth().currentUser;
-        const db = firebase.firestore();
-        const friendsRef = db.collection('users').doc(currentUser.uid).collection('friends');
-
-        const unsubscribe = friendsRef.onSnapshot((snapshot) => {
-            const friends = snapshot.docs.map((doc) => ({
-                id: doc.id,
-                ...doc.data(),
-            }));
-            setFriends(friends);
-
-            // Создание подписки на обновление данных
-            const subscriptions = friends.map((friend) => {
-                return db.collection('users').doc(friend.id).onSnapshot((doc) => {
-                    if (doc.exists) {
-                        const updatedFriend = {
-                            id: doc.id,
-                            ...doc.data(),
-                        };
-
-                        setFriends((prevFriends) => {
-                            const updatedFriends = prevFriends.map((friend) => {
-                                if (friend.id === updatedFriend.id) {
-                                    return updatedFriend;
-                                }
-                                return friend;
-                            });
-                            return updatedFriends;
-                        });
-
-                        if (selectedFriend && selectedFriend.id === updatedFriend.id) {
-                            setSelectedFriend(updatedFriend);
-                        }
-                    }
-                });
-            });
-
-            // Сохранение подписок в состоянии
-            setFriendSubscriptions(subscriptions);
-        });
-
-        return () => {
-            // Отписка от всех подписок при размонтировании компонента
-            friendSubscriptions.forEach((unsubscribe) => unsubscribe());
-        };
-    }, []);
+        // Фильтрация списка друзей по имени
+        const filteredFriends = friends.filter((friend) =>
+            friend.name.toLowerCase().includes(filteredName.toLowerCase())
+        );
+        setFilteredFriends(filteredFriends);
+    }, [friends, filteredName]);
 
     const handleRemoveFriend = async (friendId) => {
         try {
@@ -107,12 +65,10 @@ const FriendList = () => {
             await friendRef.delete();
 
             console.log('Friend removed successfully');
-            setSelectedFriend(null); // Закрытие модального окна после удаления друга
-            friendSubscriptions.forEach((unsubscribe) => unsubscribe());
+            closeProfileModal();
         } catch (error) {
             console.error('Error removing friend:', error);
         }
-
     };
 
     const openProfileModal = (friend) => {
@@ -125,29 +81,36 @@ const FriendList = () => {
 
     return (
         <View>
-            <FlatList
-                style={styles.container}
-                data={friends}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                    <View style={styles.friendContainer}>
-                        <TouchableOpacity onPress={() => openProfileModal(item)}>
-                            <View style={styles.contentFriend}>
-                                <Image source={{ uri: item.avatar }} style={styles.avatar} />
-                                <Text style={styles.friendName}>{item.name}</Text>
-                            </View>
-                        </TouchableOpacity>
-                        <View>
-                            <TouchableOpacity
-                                style={styles.send}
-                                onPress={() => navigation.navigate('ChatOneUser')}
-                            >
-                                <Image source={require('../../../../src/icon/Chat/send.png')} style={styles.icon} />
+            {filteredFriends.length === 0 && friends.length > 0 ? (
+                <Text style={styles.notFoundText}>Пользователь не найден</Text>
+            ) : null}
+            {friends.length === 0 ? (
+                <Text style={styles.emptyListText}>Список друзей пуст</Text>
+            ) : (
+                <FlatList
+                    style={styles.container}
+                    data={filteredFriends}
+                    keyExtractor={(item) => item.id}
+                    renderItem={({ item }) => (
+                        <View style={styles.friendContainer}>
+                            <TouchableOpacity onPress={() => openProfileModal(item)}>
+                                <View style={styles.contentFriend}>
+                                    <Image source={{ uri: item.avatar }} style={styles.avatar} />
+                                    <Text style={styles.friendName}>{item.name}</Text>
+                                </View>
                             </TouchableOpacity>
+                            <View>
+                                <TouchableOpacity
+                                    style={styles.send}
+                                    onPress={() => navigation.navigate('ChatOneUser')}
+                                >
+                                    <Image source={require('../../../../src/icon/Chat/send.png')} style={styles.icon} />
+                                </TouchableOpacity>
+                            </View>
                         </View>
-                    </View>
-                )}
-            />
+                    )}
+                />
+            )}
             {selectedFriend && (
                 <Modal
                     visible={true}
@@ -178,12 +141,7 @@ const FriendList = () => {
 
 const styles = StyleSheet.create({
     container: {
-      paddingTop:10,
-    },
-    heading: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 10,
+        paddingTop: 10,
     },
     friendContainer: {
         flexDirection: 'row',
@@ -210,15 +168,17 @@ const styles = StyleSheet.create({
         fontSize: 18,
         marginRight: 'auto',
     },
-    removeButton: {
-        backgroundColor: '#FF4136',
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 10,
-    },
-    removeButtonText: {
-        color: 'white',
+    notFoundText: {
         fontSize: 18,
+        color: '#5B5B5B',
+        textAlign: 'center',
+        marginTop: 10,
+    },
+    emptyListText: {
+        fontSize: 18,
+        color: '#5B5B5B',
+        textAlign: 'center',
+        marginTop: 10,
     },
     modalContainer: {
         flex: 1,

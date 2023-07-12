@@ -19,7 +19,7 @@ import { firebaseConfig } from "../../../src/api/configFirebase";
 import FoundUser from "../Users/StatusSearchUser/FoundUser";
 import Line from "../../component/Line";
 import { useNavigation } from "@react-navigation/native";
-import Friend from "./Friends/Friend";
+import FriendList from "./Friends/FriendList";
 
 // Инициализация Firebase
 if (!firebase.apps.length) {
@@ -30,9 +30,11 @@ const UserItem = () => {
     const [email, setEmail] = useState("");
     const [userFound, setUserFound] = useState(false);
     const [user, setUser] = useState(null);
-    const [showModal, setShowModal] = useState(false); // Состояние для отслеживания видимости модального окна
-    const [searched, setSearched] = useState(false); // Состояние для отслеживания, был ли выполнен поиск
-    const [friendRequestsCount, setFriendRequestsCount] = useState(0); // Количество заявок в друзья
+    const [showModal, setShowModal] = useState(false);
+    const [searched, setSearched] = useState(false);
+    const [friendRequestsCount, setFriendRequestsCount] = useState(0);
+    const [searchInputVisible, setSearchInputVisible] = useState(false);
+    const [searchFriendName, setSearchFriendName] = useState("");
     const navigation = useNavigation();
 
     const [keyboardShown, setKeyboardShown] = useState(false);
@@ -59,7 +61,6 @@ const UserItem = () => {
     }, []);
 
     const handleSearchFriend = ({ navigation }) => {
-        // Проверка валидности email
         if (!validateEmail(email)) {
             Alert.alert("Ошибка", "Пожалуйста, введите правильный email");
             return;
@@ -96,6 +97,10 @@ const UserItem = () => {
         return regex.test(email);
     };
 
+    const toggleSearchInput = () => {
+        setSearchInputVisible(!searchInputVisible);
+    };
+
     return (
         <TouchableWithoutFeedback
             onPress={() => {
@@ -104,7 +109,7 @@ const UserItem = () => {
         >
             <View style={styles.container}>
                 <View style={styles.header}>
-                    <Text style={styles.textSearchFriend}>Найти друга</Text>
+                    <Text style={styles.textSearchFriend}>Добавить друга</Text>
                     <TouchableOpacity onPress={() => navigation.navigate("NewFriends")}>
                         <Image
                             style={styles.newFriend}
@@ -138,7 +143,10 @@ const UserItem = () => {
 
                 <Modal visible={showModal} animationType="slide" transparent>
                     <View style={styles.modalContainer}>
-                        <TouchableOpacity style={styles.modalCloseButton} onPress={closeModal}>
+                        <TouchableOpacity
+                            style={styles.modalCloseButton}
+                            onPress={closeModal}
+                        >
                             <Text style={styles.modalCloseText}>Закрыть</Text>
                         </TouchableOpacity>
                         <View style={styles.modalContent}>
@@ -150,9 +158,27 @@ const UserItem = () => {
                         </View>
                     </View>
                 </Modal>
-                <Text style={styles.textFriends}>Друзья</Text>
+                <View style={styles.contentViewFriend}>
+                    <View style={styles.searchFriend}>
+                        <Text style={styles.textFriends}>Друзья</Text>
+                        <TouchableOpacity onPress={toggleSearchInput}>
+                            <Image
+                                source={require("../../../src/icon/NewFriends/search.png")}
+                                style={styles.searchFriendIcon}
+                            />
+                        </TouchableOpacity>
+                    </View>
+                    {searchInputVisible ? (
+                        <TextInput
+                            value={searchFriendName}
+                            onChangeText={setSearchFriendName}
+                            placeholder="Имя друга"
+                            style={styles.textInputSearchFriend}
+                        />
+                    ) : null}
+                </View>
                 <Line />
-                <Friend />
+                <FriendList filteredName={searchFriendName} />
             </View>
         </TouchableWithoutFeedback>
     );
@@ -249,6 +275,32 @@ const styles = StyleSheet.create({
     modalContent: {
         backgroundColor: "#FFFFFF",
         padding: 60,
+        borderRadius: 10,
+    },
+    searchFriend: {
+        display: "flex",
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+    },
+    searchFriendIcon: {
+        width: 30,
+        height: 26,
+    },
+    contentViewFriend: {
+        display: "flex",
+        flexDirection: "column",
+    },
+    textInputSearchFriend: {
+        width: "100%",
+        marginLeft: "auto",
+        marginRight: "auto",
+        marginBottom: 10,
+        paddingTop: 10,
+        paddingBottom: 10,
+        paddingLeft: 20,
+        paddingRight: 20,
+        backgroundColor: "#dadada",
         borderRadius: 10,
     },
 });
